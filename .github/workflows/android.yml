@@ -43,6 +43,10 @@ jobs:
           echo "key.alias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
           echo "key.password=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
 
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" >> local.properties
+
       - name: Build Release APK
         run: ./gradlew assembleUniversalRelease
 
