@@ -24,6 +24,10 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Install NDK
+        run: |
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
+
       - name: Run setup script
         run: |
           chmod +x scripts/setup.sh
