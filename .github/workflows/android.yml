@@ -10,6 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      GRADLE_OPTS: "-Xmx4g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+
     steps:
       - name: Checkout with submodules
         uses: actions/checkout@v4
@@ -24,6 +27,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Install build tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y cmake ninja-build nasm yasm
+
       - name: Install NDK
         run: |
           echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
@@ -32,6 +40,16 @@ jobs:
         run: |
           chmod +x scripts/setup.sh
           echo -e "\n\n\n\n\n" | scripts/./setup.sh || true
+
+      - name: Build native libraries
+        run: |
+          cd app/jni
+          if [ -f "third_party/libvpx/build.sh" ]; then
+            bash third_party/libvpx/build.sh latest
+          fi
+          if [ -f "third_party/ffmpeg/build.sh" ]; then
+            bash third_party/ffmpeg/build.sh latest
+          fi
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -54,7 +72,7 @@ jobs:
           echo "telegram.api_hash=${{ secrets.TELEGRAM_API_HASH }}" >> local.properties
 
       - name: Build Release APK
-        run: ./gradlew assembleLatestUniversalRelease
+        run: ./gradlew assembleLatestUniversalRelease --no-daemon --max-workers=2
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
